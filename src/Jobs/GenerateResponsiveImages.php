@@ -30,24 +30,26 @@ class GenerateResponsiveImages implements ShouldQueue
 
     public function handle()
     {
-        $image = Image::make($this->imageUrl);
-
         foreach ($this->paths as $mime => $links){
 
             foreach ($links as $key => $link){
-
                 if (!Storage::disk(ResponsiveImages::getFileSystemDriver($this->driver))->exists($link)) {
                     $encoded = null;
+                    $image = Image::make($this->imageUrl);
 
-                    $resizedImage = $image->resize($this->sizes[$key]['width'], $this->sizes[$key]['height'], function ($constraint) {
+                    $image->resize($this->sizes[$key]['width'], $this->sizes[$key]['height'], function ($constraint) {
                         $constraint->aspectRatio();
                         $constraint->upsize();
                     });
 
                     if($mime == 'webp') {
-                        $encoded = $resizedImage->encode($mime);
+                        $encoded = $image
+                            ->contrast(3)
+                            ->sharpen(4)
+                            ->brightness(1)
+                            ->encode($mime);
                     }else{
-                        $encoded = $resizedImage->contrast(3)->sharpen(4)->brightness(1)->encode($mime);
+                        $encoded = $image->encode($mime);
                     }
 
                     if($encoded){

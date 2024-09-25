@@ -72,13 +72,15 @@ class ResponsiveImages
                         width="'.$width.'"
                         height="'.$height.'"
                         loading="lazy"
-                    alt="' . $picture_title . '">';
+                    alt="' . $picture_title . '"
+                    fetchpriority="low">';
             } else {
                 $result .= '<img class="' . $class_name . '"
                     src="'. url($picture) . '"
                         width="'.$width.'"
                         height="'.$height.'"
-                    alt="' . $picture_title . '">';
+                    alt="' . $picture_title . '"
+                    fetchpriority="low">';
             }
         } else {
 
@@ -109,12 +111,22 @@ class ResponsiveImages
                 $result .= '<source srcset="'.str_replace(' ','%20', url($picture)) . '">';
             }
 
+            if(isset($images['png']['mobile'])){
+                $picture = Storage::disk(self::getFileSystemDriver($driver))->path($images['png']['mobile']);
+                $sizes = getimagesize($picture);
+                $calculatedMinWidth = ($sizes && count($sizes) && $sizes[0]) ? $sizes[0] : $size_pc[0];
+                $calculatedMinHeight = ($sizes && count($sizes) && $sizes[1]) ? $sizes[1] : $size_pc[1];
+            }else{
+                $calculatedMinWidth = $arraySizes['mobile']['width'];
+                $calculatedMinHeight = intval(($calculatedMinWidth / $width) * $height);
+            }
+
             $result .= '<img class="' . $class_name . '"
                     src="'.str_replace(' ','%20', url($picture)) . '"
-                        width="'.$width.'"
-                        height="'.$height.'"
-
-                    alt="' . $picture_title . '">';
+                        width="'.$calculatedMinWidth.'"
+                        height="'.$calculatedMinHeight.'"
+                    alt="' . $picture_title . '"
+                    fetchpriority="low">';
         }
 
         return '<picture>'. $result. '</picture>';
@@ -155,7 +167,7 @@ class ResponsiveImages
 
                 $imagename = pathinfo($filename, PATHINFO_FILENAME).'.'. $type;
 
-                $filePath = sprintf($mask, $size['width'], $size['height'], $mode, $imagename);
+                $filePath = sprintf($mask, $size['width'] ?? 'auto', $size['height'] ?? 'auto', $mode, $imagename);
                 $images[$type][$s] = self::generateDestinationPath($filePath, $driver);
 
                 if(!Storage::disk(self::getFileSystemDriver($driver))->exists($images[$type][$s])){
@@ -181,13 +193,16 @@ class ResponsiveImages
         $result = [];
 
         foreach ($array as $key => $item) {
+            $width = is_numeric($item[0]) ? $item[0] : null;
+            $height = is_numeric($item[1]) ? $item[1] : null;
+
             $result[$key] = [
-                'width'  => $item[0],
-                'height' => $item[1]
+                'width'  => $width,
+                'height' => $height
             ];
             $result[$key.'_x2'] = [
-                'width'  => $item[0]*2,
-                'height' => $item[1]*2
+                'width'  => $width ? $width * 2 : null,
+                'height' => $height ? $height * 2 : null
             ];
         }
 
