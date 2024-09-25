@@ -111,7 +111,10 @@ class ResponsiveImages
                 $result .= '<source srcset="'.str_replace(' ','%20', url($picture)) . '">';
             }
 
-            if(isset($images['png']['mobile'])){
+            if(
+                isset($images['png']['mobile']) &&
+                Storage::disk(self::getFileSystemDriver($driver))->exists($images['png']['mobile'])
+            ){
                 $picture = Storage::disk(self::getFileSystemDriver($driver))->path($images['png']['mobile']);
                 $sizes = getimagesize($picture);
                 $calculatedMinWidth = ($sizes && count($sizes) && $sizes[0]) ? $sizes[0] : $size_pc[0];
