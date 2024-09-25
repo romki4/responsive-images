@@ -185,7 +185,11 @@ class ResponsiveImages
 
     private static function generateDestinationPath($path, $driver)
     {
-        return str_replace(Storage::disk(self::getFileSystemDriver($driver))->path(''), rtrim(self::getConfig('destination'), '/'), $path);
+        return str_replace(
+            Storage::disk(self::getFileSystemDriver($driver))->path(''),
+            rtrim(self::getConfig('destination'), '/') . '/',
+            $path
+        );
     }
 
     private static function makeSizesArray($array)
